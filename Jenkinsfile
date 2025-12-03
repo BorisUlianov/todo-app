@@ -1,12 +1,25 @@
 pipeline {
     agent any
     
-    stages {
+        stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
+        
+        stage('Cleanup') {
+            steps {
+                script {
+                    sh '''
+                        echo "🧹 Очищаем старые контейнеры..."
+                        
+                        # Останавливаем и удаляем ВСЕ старые контейнеры todo
+                        docker stop $(docker ps -a -q --filter name=todo) 2>/dev/null || true
+                        docker rm $(docker ps -a -q --filter name=todo) 2>/dev/null || true
+                        
+                        # Удаляем старые контейнеры бэкенда
+                        docker stop $(docker ps -a
         
         stage('Deploy Backend') {
             steps {

@@ -1,5 +1,5 @@
 // Базовый URL для API
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5001/api';
 
 // Загружаем задачи при загрузке страницы
 document.addEventListener('DOMContentLoaded', loadTasks);
