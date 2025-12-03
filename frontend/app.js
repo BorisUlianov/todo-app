@@ -1,41 +1,94 @@
-const API_URL = 'http://localhost:5050/api';
+// Базовый URL для API
+const API_URL = 'http://localhost:5000/api';
 
+// Загружаем задачи при загрузке страницы
+document.addEventListener('DOMContentLoaded', loadTasks);
+
+// Функция загрузки задач
 async function loadTasks() {
-    const response = await fetch(`${API_URL}/todos`);
-    const tasks = await response.json();
-    const taskList = document.getElementById('taskList');
-    taskList.innerHTML = '';
-    
-    tasks.forEach(task => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <span>${task.title}</span>
-            <button class="delete-btn" onclick="deleteTask(${task.id})">Удалить</button>
-        `;
-        taskList.appendChild(li);
-    });
+    try {
+        const response = await fetch(`${API_URL}/todos`);
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки задач');
+        }
+        
+        const tasks = await response.json();
+        const taskList = document.getElementById('taskList');
+        
+        if (tasks.length === 0) {
+            taskList.innerHTML = '<li style="text-align: center; color: #888;">Список задач пуст</li>';
+            return;
+        }
+        
+        taskList.innerHTML = tasks.map(task => `
+            <li>
+                <span>${task.title}</span>
+                <button class="delete-btn" onclick="deleteTask(${task.id})">🗑️ Удалить</button>
+            </li>
+        `).join('');
+    } catch (error) {
+        console.error('Ошибка:', error);
+        document.getElementById('taskList').innerHTML = 
+            '<li style="color: #e53e3e;">⚠️ Ошибка загрузки задач. Проверьте подключение к серверу.</li>';
+    }
 }
 
+// Функция добавления задачи
 async function addTask() {
     const input = document.getElementById('taskInput');
     const title = input.value.trim();
     
-    if (!title) return;
+    if (!title) {
+        alert('Введите текст задачи');
+        return;
+    }
     
-    await fetch(`${API_URL}/todos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title })
-    });
-    
-    input.value = '';
-    await loadTasks();
+    try {
+        const response = await fetch(`${API_URL}/todos`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title: title })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка добавления задачи');
+        }
+        
+        input.value = ''; // Очищаем поле ввода
+        await loadTasks(); // Перезагружаем список
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Не удалось добавить задачу');
+    }
 }
 
+// Функция удаления задачи
 async function deleteTask(id) {
-    await fetch(`${API_URL}/todos/${id}`, { method: 'DELETE' });
-    await loadTasks();
+    if (!confirm('Удалить задачу?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/todos/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка удаления задачи');
+        }
+        
+        await loadTasks(); // Перезагружаем список
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Не удалось удалить задачу');
+    }
 }
 
-// Загружаем задачи при старте
-document.addEventListener('DOMContentLoaded', loadTasks);
+// Добавляем возможность добавлять задачу по Enter
+document.getElementById('taskInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        addTask();
+    }
+});

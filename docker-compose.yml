@@ -1,33 +1,10 @@
-# docker-compose.yml
+version: '3.8'
+
 services:
   backend:
     build: ./backend
+    container_name: todo-backend
     ports:
-      - "5050:5050"
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "8001:80"
+      - "5000:5000"  # Бэкенд на порту 5000
     volumes:
-      - ./frontend:/usr/share/nginx/html
-    command: >
-      sh -c "
-        # Создаем конфиг на лету
-        echo 'server {
-          listen 80;
-          server_name localhost;
-          location / {
-            root /usr/share/nginx/html;
-            index index.html;
-            try_files \$uri \$uri/ /index.html;
-          }
-          location /api {
-            proxy_pass http://backend:5050;
-            proxy_set_header Host \$host;
-          }
-        }' > /etc/nginx/conf.d/default.conf
-        && nginx -g 'daemon off;'
-      "
-    depends_on:
-      - backend
+      - ./backend:/app  # Для разработки
