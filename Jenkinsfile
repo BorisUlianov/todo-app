@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main', 
-                    url: 'https://github.com/ваш-username/todo-app.git'
+                    url: 'https://github.com/BorisUlianov/todo-app.git
             }
         }
         
@@ -24,7 +24,7 @@ pipeline {
                 script {
                     sleep 10  // Ждем запуска
                     sh 'curl -f http://localhost:8080 || exit 1'
-                    sh 'curl -f http://localhost:5000/health || exit 1'
+                    sh 'curl -f http://localhost:5050/health || exit 1'
                 }
             }
         }
@@ -32,12 +32,12 @@ pipeline {
     
     post {
         success {
-            echo '✅ Deployment successful!'
+            echo 'Deployment successful!'
             echo 'Frontend: http://localhost:8080'
-            echo 'Backend API: http://localhost:5000/api/todos'
+            echo 'Backend API: http://localhost:5050/api/todos'
         }
         failure {
-            echo '❌ Deployment failed!'
+            echo 'Deployment failed!'
         }
     }
 }
