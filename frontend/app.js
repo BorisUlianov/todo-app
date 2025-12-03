@@ -1,94 +1,50 @@
-// Базовый URL для API
-const API_URL = 'http://localhost:5001/api';
+// ИСПОЛЬЗУЙТЕ ОТНОСИТЕЛЬНЫЙ ПУТЬ через nginx
+const API_URL = '/api';  // Вместо http://localhost:5001/api
 
-// Загружаем задачи при загрузке страницы
-document.addEventListener('DOMContentLoaded', loadTasks);
-
-// Функция загрузки задач
 async function loadTasks() {
     try {
         const response = await fetch(`${API_URL}/todos`);
         if (!response.ok) {
-            throw new Error('Ошибка загрузки задач');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         const tasks = await response.json();
+        
         const taskList = document.getElementById('taskList');
+        taskList.innerHTML = '';
         
         if (tasks.length === 0) {
-            taskList.innerHTML = '<li style="text-align: center; color: #888;">Список задач пуст</li>';
+            taskList.innerHTML = '<li style="text-align: center; color: #888;">Нет задач. Добавьте первую!</li>';
             return;
         }
         
-        taskList.innerHTML = tasks.map(task => `
-            <li>
+        tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.innerHTML = `
                 <span>${task.title}</span>
-                <button class="delete-btn" onclick="deleteTask(${task.id})">🗑️ Удалить</button>
-            </li>
-        `).join('');
-    } catch (error) {
-        console.error('Ошибка:', error);
-        document.getElementById('taskList').innerHTML = 
-            '<li style="color: #e53e3e;">⚠️ Ошибка загрузки задач. Проверьте подключение к серверу.</li>';
-    }
-}
-
-// Функция добавления задачи
-async function addTask() {
-    const input = document.getElementById('taskInput');
-    const title = input.value.trim();
-    
-    if (!title) {
-        alert('Введите текст задачи');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_URL}/todos`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ title: title })
+                <button class="delete-btn" onclick="deleteTask(${task.id})">Удалить</button>
+            `;
+            taskList.appendChild(li);
         });
         
-        if (!response.ok) {
-            throw new Error('Ошибка добавления задачи');
+        // Обновляем статус
+        const statusEl = document.getElementById('status') || document.querySelector('.status');
+        if (statusEl) {
+            statusEl.textContent = `Загружено задач: ${tasks.length}`;
         }
-        
-        input.value = ''; // Очищаем поле ввода
-        await loadTasks(); // Перезагружаем список
     } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Не удалось добавить задачу');
+        console.error('Ошибка загрузки задач:', error);
+        const taskList = document.getElementById('taskList');
+        taskList.innerHTML = '<li style="color: #f44336; text-align: center;">⚠️ Ошибка подключения к серверу</li>';
+        
+        // Показываем дополнительную информацию для отладки
+        const debugInfo = document.createElement('div');
+        debugInfo.style.cssText = 'color: #666; font-size: 12px; margin-top: 10px; text-align: center;';
+        debugInfo.innerHTML = `
+            <div>Проверьте:</div>
+            <div>1. Запущен ли бэкенд: <code>docker ps | grep todo-backend</code></div>
+            <div>2. Доступен ли API: <a href="http://localhost:5001/health" target="_blank">http://localhost:5001/health</a></div>
+            <div>3. Проверьте консоль браузера (F12 → Console)</div>
+        `;
+        taskList.appendChild(debugInfo);
     }
 }
-
-// Функция удаления задачи
-async function deleteTask(id) {
-    if (!confirm('Удалить задачу?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_URL}/todos/${id}`, {
-            method: 'DELETE'
-        });
-        
-        if (!response.ok) {
-            throw new Error('Ошибка удаления задачи');
-        }
-        
-        await loadTasks(); // Перезагружаем список
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Не удалось удалить задачу');
-    }
-}
-
-// Добавляем возможность добавлять задачу по Enter
-document.getElementById('taskInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        addTask();
-    }
-});
