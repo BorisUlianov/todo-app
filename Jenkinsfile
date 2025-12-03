@@ -276,43 +276,38 @@ EOF
             steps {
                 script {
                     sh '''
-                        echo "📁 Копирование фронтенда в nginx..."
-                        
-                        # Проверяем, существует ли точка монтирования /mnt/nginx
-                        if [ -d "/mnt/nginx" ]; then
-                            echo "📂 Использую /mnt/nginx"
-                            TARGET_DIR="/mnt/nginx"
-                        else
-                            # Ищем volume nginx_volume
-                            echo "🔍 Ищем nginx volume..."
-                            VOLUME_PATH=$(docker volume inspect nginx_volume --format '{{.Mountpoint}}' 2>/dev/null || echo "")
-                            
-                            if [ -n "$VOLUME_PATH" ]; then
-                                TARGET_DIR="$VOLUME_PATH"
-                                echo "📂 Найден nginx volume: $TARGET_DIR"
-                            else
-                                # Пробуем посмотреть куда смонтирован mynginx
-                                echo "⚠️ nginx_volume не найден, проверяем контейнер mynginx..."
-                                TARGET_DIR="/var/jenkins_home/nginx_html"
-                                mkdir -p "$TARGET_DIR"
-                            fi
-                        fi
-                        
-                        # Копируем файлы
-                        echo "📄 Копируем файлы в $TARGET_DIR"
-                        cp -rf frontend/* "$TARGET_DIR/" 2>/dev/null || true
-                        
-                        # Устанавливаем права
-                        chmod -R 644 "$TARGET_DIR"/* 2>/dev/null || true
-                        chmod 755 "$TARGET_DIR" 2>/dev/null || true
-                        
-                        # Проверяем копирование
-                        echo "✅ Проверка скопированных файлов:"
-                        ls -la "$TARGET_DIR/" 2>/dev/null || echo "Не удалось проверить целевую директорию"
-                        
-                        # Перезапускаем nginx чтобы подхватил новые файлы
-                        echo "🔄 Перезапуск nginx..."
-                        docker restart mynginx 2>/dev/null || echo "⚠️ Контейнер mynginx не найден или не перезапущен"
+                        echo "📦 Копирование фронтенда в nginx..."
+                
+                        # Вариант 1: Прямо в контейнер nginx (надежнее всего)
+                        echo "1. Копируем напрямую в контейнер nginx..."
+                
+                        # Удаляем все старое в nginx
+                        docker exec mynginx sh -c "rm -rf /usr/share/nginx/html/* 2>/dev/null || true"
+                
+                        # Создаем архив с фронтендом
+                        tar -czf frontend.tar.gz -C frontend .
+                
+                        # Копируем архив в контейнер
+                        docker cp frontend.tar.gz mynginx:/tmp/
+                
+                        # Распаковываем в nginx
+                        docker exec mynginx sh -c "
+                            cd /usr/share/nginx/html
+                            tar -xzf /tmp/frontend.tar.gz -C .
+                            chmod -R 644 *
+                            rm /tmp/frontend.tar.gz
+                            echo '✅ Файлы в nginx:'
+                            ls -la
+                        "
+                
+                        # Удаляем локальный архив
+                        rm -f frontend.tar.gz
+                
+                        # Перезапускаем nginx
+                        docker restart mynginx
+                        sleep 2
+                
+                        echo "✅ Фронтенд успешно скопирован!"
                     '''
                 }
             }
