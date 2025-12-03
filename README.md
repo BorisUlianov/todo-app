@@ -9,7 +9,7 @@ docker-compose up -d
 
 # 3. Проверить работу
 curl http://localhost:8080
-curl http://localhost:5000/api/todos
+curl http://localhost:5001/api/todos
 
 # 4. Остановить приложение
 docker-compose down
