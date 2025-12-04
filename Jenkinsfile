@@ -75,7 +75,7 @@ pipeline {
                             
                             # Создаем простой Dockerfile для тестов
                             cat > Dockerfile.playwright << 'EOF'
-FROM mcr.microsoft.com/playwright:latest
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 
 WORKDIR /app
 
@@ -147,7 +147,7 @@ EOF
   "name": "todo-app-tests",
   "version": "1.0.0",
   "devDependencies": {
-    "@playwright/test": "^latest"
+    "@playwright/test": "^v1.57.0"
   }
 }
 EOF
@@ -174,7 +174,7 @@ EOF
                             echo "Building test container with generated tests..."
                             
                             cat > Dockerfile.playwright << 'EOF'
-FROM mcr.microsoft.com/playwright:latest
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 
 WORKDIR /app
 
