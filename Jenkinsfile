@@ -239,9 +239,6 @@ EOF
         }
         
         stage('Deploy Application') {
-            when {
-                branch 'main'
-            }
             steps {
                 echo '🚢 Deploying application...'
                 sh '''
@@ -280,10 +277,13 @@ EOF
             sh '''
                 echo "Saving final logs..."
                 docker-compose logs --tail=100 > final-logs.txt 2>&1 || true
+
+                echo "Stopping application..."
+                docker-compose down || true
                 
                 echo "Removing test images..."
                 docker rmi todo-playwright-tests 2>/dev/null || true
-                
+
                 echo "Cleanup completed"
             '''
             
