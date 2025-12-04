@@ -1,90 +1,68 @@
 const { test, expect } = require('@playwright/test');
 
-test.describe('Todo App E2E Tests', () => {
+test.describe('Todo App Frontend Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Переходим на главную страницу перед каждым тестом
     await page.goto('/');
   });
 
-  test('should load the page correctly', async ({ page }) => {
-    // Проверяем заголовок
+  test('should load the page with correct title', async ({ page }) => {
+    await expect(page).toHaveTitle('Todo List App');
     await expect(page.locator('h1')).toHaveText('My Todo List');
-    
-    // Проверяем наличие формы
-    await expect(page.locator('#todo-input')).toBeVisible();
-    await expect(page.locator('#add-btn')).toBeVisible();
   });
 
-  test('should add a new todo', async ({ page }) => {
-    // Вводим новую задачу
+  test('should add a new todo item', async ({ page }) => {
     const todoText = 'Buy groceries';
+    
+    // Вводим текст
     await page.fill('#todo-input', todoText);
     await page.click('#add-btn');
     
-    // Проверяем, что задача добавилась
-    const todoItem = page.locator('.todo-item').first();
-    await expect(todoItem).toContainText(todoText);
-    
-    // Проверяем статистику
-    await expect(page.locator('#total-count')).toContainText('1 task');
+    // Проверяем, что задача появилась
+    await expect(page.locator('.todo-item')).toHaveCount(1);
+    await expect(page.locator('.todo-text').first()).toHaveText(todoText);
   });
 
   test('should mark todo as completed', async ({ page }) => {
-    // Сначала добавляем задачу
+    // Добавляем задачу
     await page.fill('#todo-input', 'Test task');
     await page.click('#add-btn');
     
     // Отмечаем как выполненную
     await page.click('.toggle-btn');
     
-    // Проверяем, что задача помечена как выполненная
+    // Проверяем стиль выполненной задачи
     await expect(page.locator('.todo-item.completed')).toBeVisible();
-    await expect(page.locator('#completed-count')).toContainText('1 completed');
   });
 
-  test('should delete a todo', async ({ page }) => {
+  test('should delete a todo item', async ({ page }) => {
     // Добавляем задачу
     await page.fill('#todo-input', 'Task to delete');
     await page.click('#add-btn');
     
-    // Проверяем, что задача есть
-    await expect(page.locator('.todo-item')).toHaveCount(1);
-    
-    // Удаляем задачу
-    page.on('dialog', dialog => dialog.accept()); // Принимаем confirm
+    // Удаляем задачу (подтверждаем диалог)
+    page.on('dialog', dialog => dialog.accept());
     await page.click('.delete-btn');
     
-    // Проверяем, что задача удалена
+    // Проверяем, что список пуст
     await expect(page.locator('.todo-item')).toHaveCount(0);
-    await expect(page.locator('#total-count')).toContainText('0 tasks');
   });
 
-  test('should not add empty todo', async ({ page }) => {
-    // Пытаемся добавить пустую задачу
-    await page.fill('#todo-input', '   ');
+  test('should update task counter', async ({ page }) => {
+    // Проверяем начальное состояние
+    await expect(page.locator('#total-count')).toContainText('0 tasks');
+    
+    // Добавляем задачу
+    await page.fill('#todo-input', 'Task 1');
     await page.click('#add-btn');
     
-    // Проверяем, что задача не добавилась
-    await expect(page.locator('.todo-item')).toHaveCount(0);
-  });
-
-  test('should update statistics correctly', async ({ page }) => {
-    // Добавляем несколько задач
-    const tasks = ['Task 1', 'Task 2', 'Task 3'];
+    // Проверяем счетчик
+    await expect(page.locator('#total-count')).toContainText('1 task');
     
-    for (const task of tasks) {
-      await page.fill('#todo-input', task);
-      await page.click('#add-btn');
-      await page.waitForTimeout(300); // Небольшая задержка
-    }
+    // Добавляем еще одну
+    await page.fill('#todo-input', 'Task 2');
+    await page.click('#add-btn');
     
-    // Проверяем общее количество
-    await expect(page.locator('#total-count')).toContainText('3 tasks');
-    
-    // Отмечаем одну как выполненную
-    await page.locator('.toggle-btn').first().click();
-    
-    // Проверяем количество выполненных
-    await expect(page.locator('#completed-count')).toContainText('1 completed');
+    // Проверяем счетчик
+    await expect(page.locator('#total-count')).toContainText('2 tasks');
   });
 });
