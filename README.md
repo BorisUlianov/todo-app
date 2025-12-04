@@ -1,15 +1,17 @@
-# To-Do List Application
+# Todo List Application
 
-# 1. Клонировать репозиторий
-git clone https://github.com/ваш-username/todo-app.git
+Простое веб-приложение для управления задачами с полноценным CI/CD пайплайном.
+
+## 🚀 Быстрый старт
+
+### Предварительные требования
+- Docker и Docker Compose
+- Git
+- Jenkins (в Docker)
+
+### Локальный запуск
+
+1. **Клонируйте репозиторий:**
+```bash
+git clone https://github.com/your-username/todo-app.git
 cd todo-app
-
-# 2. Запустить приложение
-docker-compose up -d
-
-# 3. Проверить работу
-curl http://localhost:8080
-curl http://localhost:5001/api/todos
-
-# 4. Остановить приложение
-docker-compose down
