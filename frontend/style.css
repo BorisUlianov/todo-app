@@ -185,9 +185,9 @@ footer {
 /* Информация о подключении */
 .connection-info {
     background: #e7f3ff;
-    padding: 10px 15px;
+    padding: 10px;
     border-radius: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     font-size: 0.9rem;
     border-left: 4px solid #3498db;
 }

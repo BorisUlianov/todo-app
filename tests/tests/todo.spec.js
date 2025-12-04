@@ -54,27 +54,36 @@ test.describe('Todo App E2E Tests', () => {
     await expect(page.locator('.todo-item.completed')).toBeVisible();
   });
 
-  test('should delete a todo', async ({ page }) => {
-    // Добавляем задачу
-    await page.fill('#todo-input', 'Task to delete');
-    await page.click('#add-btn');
-    await page.waitForTimeout(3000); // Увеличиваем таймаут
-    
-    // Проверяем, что задача добавилась
-    await expect(page.locator('.todo-item')).toHaveCount(1);
-    
+test('should delete a todo', async ({ page }) => {
+  // Сначала очистим ВСЕ существующие задачи через UI
+  await page.reload();
+  await page.waitForTimeout(2000);
+  
+  // Удаляем все существующие задачи
+  while (await page.locator('.todo-item:not(.empty)').count() > 0) {
     // Подтверждаем диалог удаления
-    page.on('dialog', dialog => dialog.accept());
-    
-    // Удаляем задачу
-    await page.click('.delete-btn');
-    await page.waitForTimeout(3000); // Ждем удаления
-    
-    // Проверяем, что список пуст ИЛИ показывает сообщение "No tasks yet"
-    const todoItems = await page.locator('.todo-item:not(.empty):not(.error)').count();
-    const emptyMessage = await page.locator('#todo-list .empty').count();
-    
-    expect(todoItems).toBe(0);
+    page.once('dialog', dialog => dialog.accept());
+    await page.click('.delete-btn').catch(() => {});
+    await page.waitForTimeout(1000);
+  }
+  
+  // Теперь добавляем новую задачу
+  await page.fill('#todo-input', 'Task to delete');
+  await page.click('#add-btn');
+  await page.waitForTimeout(3000);
+  
+  // Проверяем, что задача добавилась (должна быть 1)
+  await expect(page.locator('.todo-item:not(.empty)')).toHaveCount(1);
+  
+  // Подтверждаем диалог удаления
+  page.once('dialog', dialog => dialog.accept());
+  
+  // Удаляем задачу
+  await page.click('.delete-btn');
+  await page.waitForTimeout(3000);
+  
+  // Проверяем, что список пуст
+  await expect(page.locator('.todo-item:not(.empty)')).toHaveCount(0);
 });
 
 test('should update task counter', async ({ page }) => {
