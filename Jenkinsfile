@@ -75,7 +75,7 @@ pipeline {
                             
                             # Создаем простой Dockerfile для тестов
                             cat > Dockerfile.playwright << 'EOF'
-FROM mcr.microsoft.com/playwright:v1.40.0-focal
+FROM mcr.microsoft.com/playwright:v1.57.0-focal
 
 WORKDIR /app
 
