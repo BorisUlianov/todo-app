@@ -8,5 +8,3 @@ COPY script.js /usr/share/nginx/html/
 
 # Экспортируем порт
 EXPOSE 80
-
-# Nginx уже запускается автоматически

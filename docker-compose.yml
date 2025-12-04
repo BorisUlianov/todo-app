@@ -3,7 +3,7 @@ services:
     build: ./backend
     container_name: todo-backend
     ports:
-      - "5001:5000"  # Или "5001:5000" если 5000 занят
+      - "5001:5000"
     environment:
       - FLASK_ENV=production
       - PORT=5000
