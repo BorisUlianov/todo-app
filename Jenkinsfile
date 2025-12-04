@@ -2,22 +2,11 @@ pipeline {
     agent any
     
     environment {
-        // Указываем переменные окружения
         DOCKER_HOST = 'unix:///var/run/docker.sock'
-        DOCKER_REGISTRY = 'your-registry' // Если используете Docker Registry
         IMAGE_NAME = 'todo-app'
     }
     
     stages {
-        stage('Checkout') {
-            steps {
-                echo '📦 Checking out source code...'
-                git branch: 'main', 
-                    url: 'https://github.com/your-username/todo-app.git',
-                    credentialsId: 'github-credentials'
-            }
-        }
-        
         stage('Backend Unit Tests') {
             steps {
                 echo '🧪 Running backend unit tests...'
@@ -31,7 +20,6 @@ pipeline {
             post {
                 failure {
                     echo '❌ Backend tests failed!'
-                    // Можно добавить уведомление
                 }
                 success {
                     echo '✅ Backend tests passed!'
@@ -94,11 +82,6 @@ pipeline {
                     # Проверяем, что контейнеры работают
                     sleep 10
                     docker ps | grep todo
-                    
-                    # Логинимся в Docker Registry (если используется)
-                    # echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                    # docker push ${IMAGE_NAME}-backend:latest
-                    # docker push ${IMAGE_NAME}-frontend:latest
                 '''
             }
             post {
@@ -122,13 +105,6 @@ pipeline {
                 docker system prune -f || true
                 docker volume prune -f || true
             '''
-            
-            // Отправляем уведомление
-            emailext (
-                subject: "[${currentBuild.result}] Pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "Check console output at: ${env.BUILD_URL}",
-                to: 'team@example.com'
-            )
         }
     }
 }
