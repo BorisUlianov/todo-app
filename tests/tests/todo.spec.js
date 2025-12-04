@@ -58,44 +58,66 @@ test.describe('Todo App E2E Tests', () => {
     // Добавляем задачу
     await page.fill('#todo-input', 'Task to delete');
     await page.click('#add-btn');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000); // Увеличиваем таймаут
+    
+    // Проверяем, что задача добавилась
+    await expect(page.locator('.todo-item')).toHaveCount(1);
     
     // Подтверждаем диалог удаления
     page.on('dialog', dialog => dialog.accept());
     
     // Удаляем задачу
     await page.click('.delete-btn');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000); // Ждем удаления
     
-    // Проверяем, что список пуст или показывает сообщение
-    const todoItems = await page.locator('.todo-item').count();
+    // Проверяем, что список пуст ИЛИ показывает сообщение "No tasks yet"
+    const todoItems = await page.locator('.todo-item:not(.empty):not(.error)').count();
     const emptyMessage = await page.locator('#todo-list .empty').count();
     
-    expect(todoItems === 0 || emptyMessage > 0).toBeTruthy();
-  });
+    expect(todoItems).toBe(0);
+});
 
-  test('should update task counter', async ({ page }) => {
-    // Проверяем начальный счетчик
+test('should update task counter', async ({ page }) => {
+    // Очищаем все задачи перед тестом
+    await page.reload(); // Перезагружаем страницу для чистого состояния
+    await page.waitForTimeout(2000);
+    
+    // Проверяем начальный счетчик (может быть не 0 если остались задачи)
+    const initialCounter = await page.locator('#total-count').textContent();
+    console.log('Initial counter:', initialCounter);
+    
+    // Если есть задачи, удаляем их
+    const initialItems = await page.locator('.todo-item:not(.empty):not(.error)').count();
+    if (initialItems > 0) {
+        page.on('dialog', dialog => dialog.accept());
+        for (let i = 0; i < initialItems; i++) {
+            await page.click('.delete-btn').catch(() => {});
+            await page.waitForTimeout(1000);
+        }
+        await page.reload();
+        await page.waitForTimeout(2000);
+    }
+    
+    // Теперь счетчик должен быть 0
     await expect(page.locator('#total-count')).toContainText('0 tasks');
     
     // Добавляем первую задачу
     await page.fill('#todo-input', 'Task 1');
     await page.click('#add-btn');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     
-    // Проверяем счетчик
-    const counterText = await page.locator('#total-count').textContent();
-    expect(counterText).toMatch(/1 task/);
+    // Проверяем счетчик - используем регулярное выражение для гибкости
+    await expect(page.locator('#total-count')).toContainText(/1 task/);
     
     // Добавляем вторую задачу
     await page.fill('#todo-input', 'Task 2');
     await page.click('#add-btn');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     
     // Проверяем счетчик
-    const finalCounter = await page.locator('#total-count').textContent();
-    expect(finalCounter).toMatch(/2 tasks/);
-  });
+    await expect(page.locator('#total-count')).toContainText(/2 tasks/);
+});
+
 
   test('should not add empty todo', async ({ page }) => {
     // Пытаемся добавить пустую задачу
