@@ -75,22 +75,22 @@ pipeline {
                             
                             # Создаем простой Dockerfile для тестов
                             cat > Dockerfile.playwright << 'EOF'
-FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+                            FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 
-WORKDIR /app
+                            WORKDIR /app
 
-# Устанавливаем curl для проверок
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+                            # Устанавливаем curl для проверок
+                            RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Копируем тесты
-COPY tests/tests/ /app/tests/
-COPY tests/package.json /app/
-COPY tests/playwright.config.js /app/
+                            # Копируем тесты
+                            COPY tests/tests/ /app/tests/
+                            COPY tests/package.json /app/
+                            COPY tests/playwright.config.js /app/
 
-# Устанавливаем зависимости
-RUN npm install
+                            # Устанавливаем зависимости
+                            RUN npm install
 
-EOF
+                            EOF
                             
                             # Собираем образ для тестов
                             docker build -t todo-playwright-tests -f Dockerfile.playwright .
@@ -116,57 +116,57 @@ EOF
                             
                             # Создаем простой тест
                             cat > tests/tests/simple.spec.js << 'EOF'
-const { test, expect } = require('@playwright/test');
+                            const { test, expect } = require('@playwright/test');
 
-test('basic connectivity test', async ({ page }) => {
-  console.log("Running simple connectivity test...");
-  
-  // Проверяем фронтенд
-  try {
-    await page.goto('http://todo-frontend:80');
-    console.log("✅ Frontend is accessible");
-  } catch (error) {
-    console.log("❌ Frontend not accessible:", error.message);
-  }
-  
-  // Проверяем бэкенд через API запрос
-  try {
-    const response = await page.evaluate(async () => {
-      return await fetch('http://todo-backend:5000');
-    });
-    console.log(`✅ Backend responded with status: ${response.status}`);
-  } catch (error) {
-    console.log("❌ Backend not accessible:", error.message);
-  }
-});
-EOF
+                            test('basic connectivity test', async ({ page }) => {
+                            console.log("Running simple connectivity test...");
+                            
+                            // Проверяем фронтенд
+                            try {
+                                await page.goto('http://todo-frontend:80');
+                                console.log("✅ Frontend is accessible");
+                            } catch (error) {
+                                console.log("❌ Frontend not accessible:", error.message);
+                            }
+                            
+                            // Проверяем бэкенд через API запрос
+                            try {
+                                const response = await page.evaluate(async () => {
+                                return await fetch('http://todo-backend:5000');
+                                });
+                                console.log(`✅ Backend responded with status: ${response.status}`);
+                            } catch (error) {
+                                console.log("❌ Backend not accessible:", error.message);
+                            }
+                            });
+                            EOF
                             
                             # Создаем package.json для тестов
                             cat > tests/package.json << 'EOF'
-{
-  "name": "todo-app-tests",
-  "version": "1.0.0",
-  "devDependencies": {
-    "@playwright/test": "^v1.57.0"
-  }
-}
-EOF
+                            {
+                            "name": "todo-app-tests",
+                            "version": "1.0.0",
+                            "devDependencies": {
+                                "@playwright/test": "^v1.57.0"
+                            }
+                            }
+                            EOF
                             
                             # Создаем playwright.config.js
                             cat > tests/playwright.config.js << 'EOF'
-const { defineConfig } = require('@playwright/test');
+                            const { defineConfig } = require('@playwright/test');
 
-module.exports = defineConfig({
-  testDir: './tests',
-  timeout: 30000,
-  retries: 1,
-  reporter: 'html',
-  use: {
-    baseURL: 'http://todo-frontend:80',
-    trace: 'on-first-retry'
-  }
-});
-EOF
+                            module.exports = defineConfig({
+                            testDir: './tests',
+                            timeout: 30000,
+                            retries: 1,
+                            reporter: 'html',
+                            use: {
+                                baseURL: 'http://todo-frontend:80',
+                                trace: 'on-first-retry'
+                            }
+                            });
+                            EOF
                         '''
                         
                         // Запускаем созданные тесты
@@ -174,16 +174,16 @@ EOF
                             echo "Building test container with generated tests..."
                             
                             cat > Dockerfile.playwright << 'EOF'
-FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+                            FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 
-WORKDIR /app
+                            WORKDIR /app
 
-COPY tests/ /app/tests/
+                            COPY tests/ /app/tests/
 
-RUN npm install --prefix /app
+                            RUN npm install --prefix /app
 
-EOF
-                            
+                            EOF
+                                                        
                             docker build -t todo-playwright-tests -f Dockerfile.playwright .
                             
                             docker run --rm \
@@ -207,32 +207,32 @@ EOF
                         
                         # Создаем простой отчет
                         cat > test-artifacts/test-report.html << 'EOF'
-<html>
-<head>
-    <title>Test Report - Todo App</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .success { color: green; }
-        .warning { color: orange; }
-        .error { color: red; }
-    </style>
-</head>
-<body>
-    <h1>Todo Application Test Report</h1>
-    <p>Build: ${BUILD_NUMBER}</p>
-    <p>Date: $(date)</p>
-    <h2>Application Status:</h2>
-    <ul>
-        <li>Frontend container: <span class="success">✓ Running</span></li>
-        <li>Backend container: <span class="success">✓ Running</span></li>
-        <li>Inter-container connectivity: <span class="success">✓ Working</span></li>
-    </ul>
-    <h2>Test Execution:</h2>
-    <p>Playwright tests were executed in an isolated Docker container.</p>
-    <p>All required containers are running and communicating properly.</p>
-</body>
-</html>
-EOF
+                        <html>
+                        <head>
+                            <title>Test Report - Todo App</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 40px; }
+                                .success { color: green; }
+                                .warning { color: orange; }
+                                .error { color: red; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>Todo Application Test Report</h1>
+                            <p>Build: ${BUILD_NUMBER}</p>
+                            <p>Date: $(date)</p>
+                            <h2>Application Status:</h2>
+                            <ul>
+                                <li>Frontend container: <span class="success">✓ Running</span></li>
+                                <li>Backend container: <span class="success">✓ Running</span></li>
+                                <li>Inter-container connectivity: <span class="success">✓ Working</span></li>
+                            </ul>
+                            <h2>Test Execution:</h2>
+                            <p>Playwright tests were executed in an isolated Docker container.</p>
+                            <p>All required containers are running and communicating properly.</p>
+                        </body>
+                        </html>
+                        EOF
                     '''
                 }
             }
